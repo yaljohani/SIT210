@@ -1,0 +1,58 @@
+import RPi.GPIO as GPIO
+import time
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+#setting the pins
+LED=14
+TR = 17
+Echo = 27
+Buzz = 3
+
+#setting pins to IN/OUT
+GPIO.setup(TR, GPIO.OUT)
+GPIO.setup(Echo, GPIO.IN)
+GPIO.setup(LED, GPIO.OUT)
+GPIO.setup(Buzz, GPIO.OUT)
+
+#setting frequency
+LED_PWM=GPIO.PWM(LED,50)
+Buzz_PWM=GPIO.PWM(Buzz, 5)
+
+# begin the code with 0 Hz of both LED and Buzzer
+LED_PWM.start(0)
+Buzz_PWM.start(0)
+
+def dis_func():# function to calculate the distance
+
+    GPIO.output(TR, True)
+    time.sleep(0.00001)
+    GPIO.output(TR, False) #after 10 milisecond turn the trigger to LOW
+ 
+    while GPIO.input(Echo) == 0:#inisiolize begin time
+        begin = time.time()
+    while GPIO.input(Echo) != 0:#inisiolize end time
+        end = time.time()
+ 
+    return ((end-begin) * 17000)
+
+try:
+    while True:
+        
+        dist = dis_func()
+            
+        if (dist<=50):
+            LED_PWM.ChangeDutyCycle((50-dist)*2)
+            Buzz_PWM.ChangeDutyCycle((50-dist)*2)
+            time.sleep(0.005)          
+        else:
+            LED_PWM.ChangeDutyCycle(0)
+            Buzz_PWM.ChangeDutyCycle(0)
+                
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    LED_PWM.stop()
+    Buzz_PWM.stop()
+    GPIO.cleanup()
